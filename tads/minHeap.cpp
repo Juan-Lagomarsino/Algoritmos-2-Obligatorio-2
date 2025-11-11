@@ -11,7 +11,7 @@
 
 using namespace std;
 template <class T>
-class minHeapImp
+    : public List<T> class minHeapImp
 { // Copio y pego del anterior obli
 private:
     T **array;
