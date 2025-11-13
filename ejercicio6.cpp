@@ -131,10 +131,9 @@ private:
     int N;
     int M;
     int F;
-    bool sePuede;
     int solucion;
-    int iterPozos;
     int iterAyudas;
+    int potencia;
 
 public:
     SkatePropulsado(int cantPozos, int cantAyudas, int amigo)
@@ -152,11 +151,10 @@ public:
         {
             pozos[x] = NULL;
         }
-        maxHeapAyudas = new maxHeap(cantAyudas);
-        sePuede = true;
-        iterPozos = 0;
-        iterAyudas = 0;
+        maxHeapAyudas = new maxHeap(cantAyudas); // esot ants era solo M
         solucion = 0;
+        potencia = 1;
+        iterAyudas = 0;
     }
     void agregarPozo(int i, int d, int j)
     {
@@ -176,61 +174,29 @@ public:
     {
         for (int i = 0; i < N; i++)
         {
-
             int inicioPozo = pozos[i]->empieza;
             int finPozo = pozos[i]->termina;
-            int salto = finPozo - inicioPozo + 1;
+            int salto = finPozo - inicioPozo + 2;
 
             while (iterAyudas < M && ayudas[iterAyudas]->donde < inicioPozo)
             {
                 maxHeapAyudas->agregar(ayudas[iterAyudas]);
                 iterAyudas++;
             }
-            while (salto > 0 && !maxHeapAyudas->estaVacio())
+            while (potencia < salto)
             {
+                if (maxHeapAyudas->estaVacio())
+                {
+                    cout << "Imposible" << endl;
+                    return;
+                }
                 nodoAyuda *aux = maxHeapAyudas->sacarElDeArriba();
-                salto -= aux->potencia;
+                potencia += aux->potencia;
                 solucion++;
-            }
-            if (salto > 0)
-            {
-                sePuede = false;
-                cout << "Imposible" << endl;
-                return;
             }
         }
         cout << solucion << endl;
-        //     if (iterPozos >= N)
-        //     {
-        //         cout << solucion << endl;
-        //         return;
-        //     }
-        //     // [1][3]  3-1 = 2
-        //     int salto = pozos[iterPozos]->termina - pozos[iterPozos]->empieza + 1;                                         // Discreta, si da mal probar sacarlo.
-        //     while (iterAyudas < M && ayudas[iterAyudas] != NULL && ayudas[iterAyudas]->donde <= pozos[iterPozos]->empieza) // Este menor igual , creo que es sin igual
-        //     {
-        //         maxHeapAyudas->agregar(ayudas[iterAyudas]);
-        //         iterAyudas++;
-        //     }
-
-        //     iterPozos++;
-        //     while (salto > 0 && !maxHeapAyudas->estaVacio())
-        //     {
-        //         nodoAyuda *aux = maxHeapAyudas->sacarElDeArriba();
-        //         salto -= aux->potencia;
-        //         solucion++;
-        //     }
-        //     if (salto <= 0)
-        //     {
-        //     }
-        //     else
-        //     {
-        //         sePuede = false;
-        //         cout << "Imposible" << endl;
-        //     }
-        //     return;
-
-        // }
+        return;
     }
 };
 int main()
