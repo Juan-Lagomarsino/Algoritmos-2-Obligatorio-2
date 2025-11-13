@@ -176,7 +176,7 @@ public:
         {
             int inicioPozo = pozos[i]->empieza;
             int finPozo = pozos[i]->termina;
-            int salto = finPozo - inicioPozo + 2;
+            int salto = finPozo - inicioPozo + 2; // Este dos lo saque por pruebas, la verdad para mi deberia ser un uno
 
             while (iterAyudas < M && ayudas[iterAyudas]->donde < inicioPozo)
             {
