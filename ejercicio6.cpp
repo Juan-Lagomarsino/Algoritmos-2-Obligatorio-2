@@ -23,7 +23,6 @@ private:
     nodoAyuda **array;
     int proxLibre;
     int capacidad;
-    bool (*esMenor)(nodoAyuda, nodoAyuda);
 
     // https://heap.uruguayan.ninja/15
     int hijoIzq(int i)
@@ -65,15 +64,15 @@ private:
         int posDer = hijoDer(pos);
         if (posIzq < proxLibre)
         { // tiene al menos un hijo (no es una hoja)
-            int posHMenor = posIzq;
+            int posMayor = posIzq;
             if (posDer < proxLibre && array[posDer]->potencia > array[posIzq]->potencia)
-            {                       // si tengo hijo derecho y es menor que el izquierdo
-                posHMenor = posDer; // cambio el menor hijo
+            {                      // si tengo hijo derecho y es mayor que el izquierdo
+                posMayor = posDer; // cambio el mayor hijo
             }
-            if (array[posHMenor]->potencia > array[pos]->potencia)
-            { // si el menor de mis hijos es menor que yo, intercambio
-                cambiarLugares(pos, posHMenor);
-                hundir(posHMenor); // llamo de forma recursiva
+            if (array[posMayor]->potencia > array[pos]->potencia)
+            { // si el mayor de mis hijos es mayor que yo, intercambio
+                cambiarLugares(pos, posMayor);
+                hundir(posMayor); // llamo de forma recursiva
             }
         }
     }
@@ -102,8 +101,12 @@ public:
     { // Capas que hay que sacarla, no se seguto si se usa todavia
         assert(!estaVacio());
         nodoAyuda *ret = array[1];
-        array[1] = array[--proxLibre];
-        hundir(1);
+        proxLibre--;
+        if (proxLibre > 1)
+        {
+            array[1] = array[proxLibre];
+            hundir(1);
+        }
         return ret;
     }
 
@@ -124,42 +127,23 @@ class SkatePropulsado
 private:
     nodoAyuda **ayudas;
     nodoPozo **pozos;
-    int posPozo;
-    maxHeap *comparoPozos;
-    int pideA;
+    maxHeap *maxHeapAyudas;
+    int N;
+    int M;
+    int F;
     bool sePuede;
-
-    int llegaPidiendo()
-    {
-        int salto = pozos[posPozo]->termina - pozos[posPozo]->empieza + 1; // Discreta core
-        for (int i = posPozo; i < pozos[posPozo]->empieza; i++)
-        {
-            if (ayudas[i] != NULL)
-            {
-                comparoPozos->agregar(ayudas[i]);
-            }
-        }
-        posPozo = pozos[posPozo]->termina;
-        int necesita = 0;
-        int lePideA = 0;
-        while (necesita < salto)
-        {
-            nodoAyuda *aux = comparoPozos->sacarElDeArriba();
-            if (aux == NULL && necesita < salto)
-            {
-                sePuede = false;
-                return; // Si llega a no ser es un break
-            }
-            necesita += aux->potencia;
-            lePideA++;
-        }
-    }
+    int solucion;
+    int iterPozos;
+    int iterAyudas;
 
 public:
-    SkatePropulsado(int cantAyudas, int cantPozos, int amigo)
+    SkatePropulsado(int cantPozos, int cantAyudas, int amigo)
     {
         ayudas = new nodoAyuda *[cantAyudas];
         pozos = new nodoPozo *[cantPozos];
+        N = cantPozos;
+        M = cantAyudas;
+        F = amigo;
         for (int x = 0; x < cantAyudas; x++)
         {
             ayudas[x] = NULL;
@@ -168,9 +152,11 @@ public:
         {
             pozos[x] = NULL;
         }
-        posPozo = 0;
-        comparoPozos = new maxHeap(cantAyudas);
+        maxHeapAyudas = new maxHeap(cantAyudas);
         sePuede = true;
+        iterPozos = 0;
+        iterAyudas = 0;
+        solucion = 0;
     }
     void agregarPozo(int i, int d, int j)
     {
@@ -186,11 +172,67 @@ public:
         ayuda->potencia = cuanto;
         ayudas[k] = ayuda;
     }
-    int minimasAyudas()
+    void minimasAyudas()
     {
+        for (int i = 0; i < N; i++)
+        {
+
+            int inicioPozo = pozos[i]->empieza;
+            int finPozo = pozos[i]->termina;
+            int salto = finPozo - inicioPozo + 1;
+
+            while (iterAyudas < M && ayudas[iterAyudas]->donde < inicioPozo)
+            {
+                maxHeapAyudas->agregar(ayudas[iterAyudas]);
+                iterAyudas++;
+            }
+            while (salto > 0 && !maxHeapAyudas->estaVacio())
+            {
+                nodoAyuda *aux = maxHeapAyudas->sacarElDeArriba();
+                salto -= aux->potencia;
+                solucion++;
+            }
+            if (salto > 0)
+            {
+                sePuede = false;
+                cout << "Imposible" << endl;
+                return;
+            }
+        }
+        cout << solucion << endl;
+        //     if (iterPozos >= N)
+        //     {
+        //         cout << solucion << endl;
+        //         return;
+        //     }
+        //     // [1][3]  3-1 = 2
+        //     int salto = pozos[iterPozos]->termina - pozos[iterPozos]->empieza + 1;                                         // Discreta, si da mal probar sacarlo.
+        //     while (iterAyudas < M && ayudas[iterAyudas] != NULL && ayudas[iterAyudas]->donde <= pozos[iterPozos]->empieza) // Este menor igual , creo que es sin igual
+        //     {
+        //         maxHeapAyudas->agregar(ayudas[iterAyudas]);
+        //         iterAyudas++;
+        //     }
+
+        //     iterPozos++;
+        //     while (salto > 0 && !maxHeapAyudas->estaVacio())
+        //     {
+        //         nodoAyuda *aux = maxHeapAyudas->sacarElDeArriba();
+        //         salto -= aux->potencia;
+        //         solucion++;
+        //     }
+        //     if (salto <= 0)
+        //     {
+        //     }
+        //     else
+        //     {
+        //         sePuede = false;
+        //         cout << "Imposible" << endl;
+        //     }
+        //     return;
+
+        // }
     }
 };
-
 int main()
 {
     int N;              // N es la cantidad de pozos
@@ -213,6 +255,6 @@ int main()
         ejercicio6->agregarPotencia(X, P, k);
     }
 
-    cout << ejercicio6->minimasAyudas() << endl;
+    ejercicio6->minimasAyudas();
     return 0;
 }
