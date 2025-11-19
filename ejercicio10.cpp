@@ -16,14 +16,14 @@ private:
     int mejorPaso; // Arranca en 0
 
 public:
-    busqueda(string **m, int **s, string b, int f, int c)
+    busqueda(string **m, int **s, string b, int f, int c, int _mejorPaso)
     {
         mat = m;
         sandbox = s;
         busco = b;
         filas = f;
         columnas = c;
-        mejorPaso = 0;
+        mejorPaso = _mejorPaso;
     }
     bool esSolucion(int filaAc, int colAc)
     {
@@ -32,12 +32,12 @@ public:
 
     bool coordenadaValida(int f, int c)
     {
-        return f >= 0 && c >= 0 && f < filas && c < columnas && (mat[f][c] == "C" || mat[f][c] == busco);
+        return f >= 0 && c >= 0 && f < filas && c < columnas;
     }
 
     bool puedoAplicarMovimiento(int fila, int col, int **sandbox)
     {
-        return coordenadaValida(fila, col) && sandbox[fila][col] == 0;
+        return coordenadaValida(fila, col) && sandbox[fila][col] == 0 && (mat[fila][col] == "C" || mat[fila][col] == busco);
     }
 
     void aplicarMovimiento(int fila, int col, int **sandbox, int paso)
@@ -45,33 +45,33 @@ public:
         sandbox[fila][col] = paso;
     }
 
-    void deshacerMovimiento(int fila, int col, int **sandbox, int paso)
+    void deshacerMovimiento(int fila, int col, int **sandbox)
     {
         sandbox[fila][col] = 0;
     }
 
-    bool mejorSolucion(int paso, int mejorPaso)
+    bool mejorSolucion(int paso)
     {
         return paso < mejorPaso;
     }
 
-    bool podemosPodar(int paso, int mejorPaso)
+    bool podemosPodar(int paso)
     {
         return paso > mejorPaso;
     }
 
-    int buscoEnPasos(int **sandbox, int filaAc, int colAc, int paso, int &mejorPaso)
+    int buscoEnPasos(int **sandbox, int filaAc, int colAc, int paso)
     {
-        if (!podemosPodar(paso, mejorPaso))
+        if (!podemosPodar(paso))
         {
-            if (esSolucion(filaAc, colAc) && mejorSolucion(paso, mejorPaso))
+            if (esSolucion(filaAc, colAc) && mejorSolucion(paso))
             {
                 mejorPaso = paso;
             }
             else
             {
-                int df[4] = {-1, 0, 1, 0};
-                int dc[4] = {0, 1, 0, -1};
+                int df[4] = {1, 0, 0, -1};
+                int dc[4] = {0, 1, -1, 0};
                 for (int mov = 0; mov < 4; mov++)
                 {
                     int nuevaFila = filaAc + df[mov];
@@ -79,8 +79,8 @@ public:
                     if (puedoAplicarMovimiento(nuevaFila, nuevaCol, sandbox))
                     {
                         aplicarMovimiento(nuevaFila, nuevaCol, sandbox, paso);
-                        buscoEnPasos(sandbox, nuevaFila, nuevaCol, paso + 1, mejorPaso);
-                        deshacerMovimiento(nuevaFila, nuevaCol, sandbox, paso);
+                        buscoEnPasos(sandbox, nuevaFila, nuevaCol, paso + 1);
+                        deshacerMovimiento(nuevaFila, nuevaCol, sandbox);
                     }
                 }
             }
@@ -91,9 +91,9 @@ public:
 
 int main()
 {
-    string S;
+    string busco;
     int cantFC;
-    cin >> S;
+    cin >> busco;
     cin >> cantFC;
     int FC = 0;
     int min = INT_MAX;
@@ -125,10 +125,9 @@ int main()
 
         sandbox[0][0] = 1;
 
-        busqueda *ejercicio10 = new busqueda(mat, sandbox, S, f, c);
-        int mejorPaso = INT_MAX;
+        busqueda *ejercicio10 = new busqueda(mat, sandbox, busco, f, c, min);
 
-        int res = ejercicio10->buscoEnPasos(sandbox, 0, 0, 2, mejorPaso);
+        int res = ejercicio10->buscoEnPasos(sandbox, 0, 0, 0);
 
         if (res < min)
         {
